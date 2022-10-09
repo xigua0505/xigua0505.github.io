@@ -172,7 +172,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/10/09/local-ssl-cert/" class="post-title-link" itemprop="url">local_ssl_cert</a>
+            <a href="/2022/10/09/local-ssl-cert/" class="post-title-link" itemprop="url">如何实现局域网https访问</a>
         </h2>
 
         <div class="post-meta">
@@ -183,7 +183,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-10-09 19:12:57 / 修改时间：19:27:25" itemprop="dateCreated datePublished" datetime="2022-10-09T19:12:57+08:00">2022-10-09</time>
+              <time title="创建时间：2022-10-09 19:12:57 / 修改时间：19:44:03" itemprop="dateCreated datePublished" datetime="2022-10-09T19:12:57+08:00">2022-10-09</time>
             </span>
 
           
@@ -197,11 +197,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="搭建本地https域名访问"><a href="#搭建本地https域名访问" class="headerlink" title="搭建本地https域名访问"></a>搭建本地https域名访问</h1><h2 id="1-创建根SSL证书"><a href="#1-创建根SSL证书" class="headerlink" title="1. 创建根SSL证书"></a>1. 创建根SSL证书</h2><p>第一步是创建一个安全套接层（CA SSL）根证书。然后可以使用此根证书为可能为单个域生成的任意数量的证书签名。</p>
+          <h1 id="如何实现局域网https域名访问"><a href="#如何实现局域网https域名访问" class="headerlink" title="如何实现局域网https域名访问"></a>如何实现局域网https域名访问</h1><h2 id="1-创建根SSL证书"><a href="#1-创建根SSL证书" class="headerlink" title="1. 创建根SSL证书"></a>1. 创建根SSL证书</h2><p>第一步是创建一个安全套接层（CA SSL）根证书。然后可以使用此根证书为可能为单个域生成的任意数量的证书签名。</p>
 <p>创建 root key</p>
-<p><code>openssl genrsa -des3 -out rootCA.key 2048</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl genrsa -des3 -out rootCA.key 2048</span><br></pre></td></tr></table></figure>
+
 <p>使用生成的密钥来创建新的根SSL证书,并将其保存为rootCA.pem</p>
-<p><code>openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem</span><br></pre></td></tr></table></figure>
+
 <h2 id="2-信任证书"><a href="#2-信任证书" class="headerlink" title="2. 信任证书"></a>2. 信任证书</h2><p>win + r 键，输入mmc</p>
 <p>在控制台 - &gt; 文件 - &gt; 添加&#x2F;删除管理单元 -&gt; 证书 - &gt; 添加 -&gt; 确定</p>
 <p>点击 证书 - &gt; 受信任的根证书颁发机构 - &gt; 所有任务生成域ssl证书 - &gt;  导入</p>
@@ -211,9 +213,11 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">authorityKeyIdentifier=keyid,issuer</span><br><span class="line">basicConstraints=CA:FALSE</span><br><span class="line">keyUsage=digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment</span><br><span class="line">subjectAltName=@alt_names</span><br><span class="line"></span><br><span class="line">[alt_names]</span><br><span class="line">DNS.1 = *.zhongjiao.cn</span><br></pre></td></tr></table></figure>
 
 <p>创建证书密钥</p>
-<p><code>openssl req -new -sha256 -nodes -out server.csr -newkey rsa:2048 -keyout server.key</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl req -new -sha256 -nodes -out server.csr -newkey rsa:2048 -keyout server.key</span><br></pre></td></tr></table></figure>
+
 <p>证书签名请求通过之前创建的根SSL证书颁发，创建出一个 *.zhongjiao.cn 的域名证书</p>
-<p><code>openssl x509 -req -in server.csr -CA [pem路径] -CAkey [key路径] -CAcreateserial -out server.crt -days 500 -sha256 -extfile v3.ext</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl x509 -req -in server.csr -CA [pem路径] -CAkey [key路径] -CAcreateserial -out server.crt -days 500 -sha256 -extfile v3.ext</span><br></pre></td></tr></table></figure>
+
 <h2 id="4-使用证书"><a href="#4-使用证书" class="headerlink" title="4  使用证书"></a>4  使用证书</h2><p>这里我使用的是nginx</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 8080 ssl;</span><br><span class="line">        ssl_certificate     /etc/nginx/ssl/server.crt;</span><br><span class="line">        ssl_certificate_key /etc/nginx/ssl/server.key;</span><br><span class="line">        </span><br><span class="line">        ...</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
 
@@ -223,7 +227,7 @@
 <p>修改本地hosts文件让demo.zhongjiao.cn指向本地地址，windows上路径为 <code>C:\Windows\System32\drivers\etc</code></p>
 <p>重启浏览器后用https去访问demo.zhongjiao.cn，成功的话会显示证书安全</p>
 <h2 id="5-实现局域网内其他设备可访问"><a href="#5-实现局域网内其他设备可访问" class="headerlink" title="5. 实现局域网内其他设备可访问"></a>5. 实现局域网内其他设备可访问</h2><p>客户端修改hosts文件，这样的方式每台需要访问的设备都要改文件</p>
-<h2 id="cert"><a href="#cert" class="headerlink" title="cert"></a>cert</h2><p><a target="_blank" rel="noopener" href="https://kanda.me/2019/08/05/get-lets-encrypt-cert/">https://kanda.me/2019/08/05/get-lets-encrypt-cert/</a></p>
+<h2 id="cert"><a href="#cert" class="headerlink" title="cert"></a>cert</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://kanda.me/2019/08/05/get-lets-encrypt-cert/</span><br></pre></td></tr></table></figure>
 
       
     </div>
