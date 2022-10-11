@@ -5,6 +5,9 @@
 <p>一个 File 被映射成多个 Object 后，需要把每个 Object 独立的映射到一个 PG 上。</p>
 <p>Object 的 size 应当被合理设置，通常为2或4MB。<br>PG也应该足够多，推荐为 OSD 的数百倍。</p>
 <p>PG -&gt; OSD 的映射是多对多的，一个 PG 由 CRUSH 算法得到一组 OSD（共n个，n可配置）。<br>这n个OSD共同负责存储和维护一个 PG 中所有的 Object。</p>
+<p>Cpeh 客户端在读写数据之前必须连个某个 ceph-mon ，获取最新的集群运行图副本。</p>
+<p>Mon 不会主动轮询各个OSD的当前状态，OSD会主动上报。MON 收到信息后，会更新 Cluster Map 信息并加以扩散。</p>
+<p>PG 与 OSD 之间的映射关系通常是不变的，除非扩容、设备损坏、修改分配策略， CRUSH 会重新分配映射关系。</p>
 <blockquote>
 <p>注：下方是从其他位置 copy 过来帮助记忆的</p>
 </blockquote>
